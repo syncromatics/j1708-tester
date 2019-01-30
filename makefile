@@ -6,14 +6,18 @@ LINUX_ARM_BUILD_PATH = $(BUILD_PATH)/arm/$(APP_NAME)
 WINDOWS_BUILD_PATH = $(BUILD_PATH)/windows/$(APP_NAME).exe
 MAC_BUILD_PATH = $(BUILD_PATH)/darwin/$(APP_NAME)
 
-.PHONY: build run package
+.PHONY: build deps run package
 
-build:
+build: deps
+	statik -f -src=./web -dest=./internal/web
 	mkdir -p artifacts/linux artifacts/arm artifacts/windows artifacts/darwin
 	GOOS=linux GOARCH=amd64 go build -o $(LINUX_BUILD_PATH) cmd/$(APP_NAME)/main.go
 	GOOS=linux GOARCH=arm go build -o $(LINUX_ARM_BUILD_PATH) cmd/$(APP_NAME)/main.go
 	GOOS=darwin GOARCH=amd64 go build -o $(MAC_BUILD_PATH) cmd/$(APP_NAME)/main.go
 	GOOS=windows GOARCH=amd64 go build -o $(WINDOWS_BUILD_PATH) cmd/$(APP_NAME)/main.go
+
+deps:
+	go get github.com/rakyll/statik
 
 run:
 	go run cmd/$(APP_NAME)/main.go
