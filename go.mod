@@ -1,6 +1,13 @@
 module github.com/syncromatics/j1708-tester
 
 require (
+	github.com/akavel/rsrc v0.0.0-20170831122431-f6a15ece2cfd // indirect
+	github.com/asticode/go-astiamqp v1.0.0 // indirect
+	github.com/asticode/go-astilectron v0.8.0
+	github.com/asticode/go-astilectron-bootstrap v0.0.0-20180616141213-b3211646d205
+	github.com/asticode/go-astilectron-bundler v0.0.0-20190127132334-b4399eac7e69 // indirect
+	github.com/asticode/go-astilog v1.0.0
+	github.com/asticode/go-bindata v0.0.0-20151023091102-a0ff2567cfb7 // indirect
 	github.com/coreos/etcd v3.3.11+incompatible // indirect
 	github.com/gofrs/uuid v3.2.0+incompatible // indirect
 	github.com/google/pprof v0.0.0-20190109223431-e84dfd68c163 // indirect
@@ -10,6 +17,7 @@ require (
 	github.com/jacobsa/go-serial v0.0.0-20180131005756-15cf729a72d4
 	github.com/jroimartin/gocui v0.4.0
 	github.com/mattn/go-runewidth v0.0.4 // indirect
+	github.com/mitchellh/go-homedir v1.1.0
 	github.com/nsf/termbox-go v0.0.0-20190121233118-02980233997d // indirect
 	github.com/pkg/errors v0.8.1
 	github.com/rakyll/statik v0.1.5
