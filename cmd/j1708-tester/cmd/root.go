@@ -11,11 +11,14 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/pkg/errors"
 	"github.com/rakyll/statik/fs"
 	"github.com/syncromatics/j1708-tester/internal/web"
 	"github.com/syncromatics/j1708-tester/pkg/common"
 	"github.com/syncromatics/j1708-tester/pkg/simma"
 
+	astilectron "github.com/asticode/go-astilectron"
+	homedir "github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
 	"golang.org/x/sync/errgroup"
 )
@@ -26,6 +29,7 @@ var (
 	hub         *web.Hub
 	interpreter = &common.J1587Interpreter{}
 	addr        *string
+	noUI        *bool
 )
 
 var rootCmd = &cobra.Command{
@@ -82,6 +86,10 @@ var rootCmd = &cobra.Command{
 		log.Println("")
 		log.Println("press CTRL+C to exit.")
 
+		if noUI == nil || !*noUI {
+			grp.Go(startUI(cancel))
+		}
+
 		waiter := make(chan os.Signal, 1)
 		signal.Notify(waiter, syscall.SIGINT, syscall.SIGTERM)
 		select {
@@ -101,6 +109,7 @@ var rootCmd = &cobra.Command{
 func init() {
 	port = rootCmd.Flags().IntP("port", "p", 8080, "The port to host the server on")
 	device = rootCmd.Flags().StringP("device", "d", "", "The vehicle network device")
+	noUI = rootCmd.Flags().Bool("no-ui", false, "setting this flag disables the ui")
 }
 
 func Execute() {
@@ -155,4 +164,51 @@ func getDefaultDevice() *string {
 		break
 	}
 	return &d
+}
+
+func startUI(cancel func()) func() error {
+	return func() error {
+		home, err := homedir.Dir()
+		if err != nil {
+			return errors.Wrap(err, "failed getting home directory")
+		}
+
+		a, err := astilectron.New(astilectron.Options{
+			AppName:           "J1708/1587 Tester",
+			BaseDirectoryPath: fmt.Sprintf("%s/.j1708tester/", home),
+		})
+		if err != nil {
+			return err
+		}
+		defer a.Close()
+
+		err = a.Start()
+		if err != nil {
+			return err
+		}
+
+		w, err := a.NewWindow(fmt.Sprintf("http://127.0.0.1:%d", *port), &astilectron.WindowOptions{
+			Center: astilectron.PtrBool(true),
+			Height: astilectron.PtrInt(600),
+			Width:  astilectron.PtrInt(600),
+		})
+		if err != nil {
+			return errors.Wrap(err, "failed to new window")
+		}
+
+		err = w.Create()
+		if err != nil {
+			return errors.Wrap(err, "failed to create window")
+		}
+
+		w.On(astilectron.EventNameWindowEventClosed, func(e astilectron.Event) (deleteListener bool) {
+			cancel()
+			a.Stop()
+			return
+		})
+
+		a.Wait()
+
+		return nil
+	}
 }
